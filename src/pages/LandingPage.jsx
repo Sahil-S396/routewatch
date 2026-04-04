@@ -72,7 +72,7 @@ export default function LandingPage() {
           <div className="hidden md:flex items-center space-x-8">
             <a className="uppercase tracking-wider text-sm font-bold text-[#3fff8b] border-b-2 border-[#3fff8b] pb-1" href="#features" style={{ fontFamily: 'Manrope, sans-serif' }}>Features</a>
             <a className="uppercase tracking-wider text-sm font-bold text-gray-400 hover:text-[#3fff8b] transition-colors" href="#solutions" style={{ fontFamily: 'Manrope, sans-serif' }}>Solutions</a>
-            <a className="uppercase tracking-wider text-sm font-bold text-gray-400 hover:text-[#3fff8b] transition-colors" href="#pricing" style={{ fontFamily: 'Manrope, sans-serif' }}>Pricing</a>
+
           </div>
           <div className="flex items-center gap-4">
             <button
@@ -221,6 +221,141 @@ export default function LandingPage() {
                 <div className="text-[#adaaaa] text-xs uppercase tracking-[0.4em] font-bold">Global Infrastructure Reliability</div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* ── Solutions ── */}
+        <section id="solutions" className="py-32 bg-[#080808] relative overflow-hidden">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#3fff8b]/3 blur-[200px] rounded-full pointer-events-none" />
+          <div className="max-w-7xl mx-auto px-8 relative z-10">
+
+            {/* Header */}
+            <div className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-8">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#3fff8b]/10 text-[#3fff8b] rounded-full mb-6 border border-[#3fff8b]/20">
+                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>hub</span>
+                  <span className="text-xs font-bold tracking-widest uppercase" style={{ fontFamily: 'Manrope, sans-serif' }}>Built for Every Chain</span>
+                </div>
+                <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter" style={{ fontFamily: 'Manrope, sans-serif' }}>
+                  Solutions for <br /><span className="text-[#3fff8b]">every operation.</span>
+                </h2>
+              </div>
+              <p className="text-[#adaaaa] text-lg max-w-sm leading-relaxed">
+                RouteWatch adapts to your industry — delivering precision intelligence where disruptions cost the most.
+              </p>
+            </div>
+
+            {/* Solution Cards */}
+            <div className="grid md:grid-cols-3 gap-6 mb-16">
+
+              {/* Card 1 — Freight & Logistics */}
+              <div className="group relative bg-[#131313] rounded-3xl p-8 border border-[#494847]/20 hover:border-[#3fff8b]/30 transition-all duration-500 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#3fff8b]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10">
+                  <div className="w-14 h-14 bg-[#3fff8b]/10 flex items-center justify-center rounded-2xl mb-8 text-[#3fff8b] group-hover:scale-110 transition-transform duration-300">
+                    <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>local_shipping</span>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-3" style={{ fontFamily: 'Manrope, sans-serif' }}>Freight &amp; Logistics</h3>
+                  <p className="text-[#adaaaa] text-sm leading-relaxed mb-8">
+                    Track every shipment across road, air, and sea in real time. Automated rerouting eliminates dwell time and slashes fuel costs through dynamic path optimisation.
+                  </p>
+                  <ul className="space-y-3 mb-10">
+                    {['Multi-modal shipment visibility', 'Carrier SLA breach alerts', 'Dynamic ETD recalculation'].map(item => (
+                      <li key={item} className="flex items-center gap-3 text-sm text-[#adaaaa]">
+                        <span className="w-5 h-5 rounded-full bg-[#3fff8b]/15 flex items-center justify-center flex-shrink-0">
+                          <span className="material-symbols-outlined text-[#3fff8b]" style={{ fontSize: '12px', fontVariationSettings: "'FILL' 1" }}>check</span>
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex items-center gap-2 text-[#3fff8b] text-xs font-bold uppercase tracking-widest group-hover:gap-4 transition-all" style={{ fontFamily: 'Manrope, sans-serif' }}>
+                    Explore Solution
+                    <span className="material-symbols-outlined text-sm">arrow_right_alt</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2 — Port & Terminal Ops (highlighted) */}
+              <div className="group relative bg-gradient-to-b from-[#1a2e1e] to-[#131313] rounded-3xl p-8 border border-[#3fff8b]/30 overflow-hidden">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-[#3fff8b]/15 blur-[80px] -mr-10 -mt-10 pointer-events-none" />
+                <div className="absolute top-5 right-5 bg-[#3fff8b] text-[#003d1d] text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest" style={{ fontFamily: 'Manrope, sans-serif' }}>
+                  Most Popular
+                </div>
+                <div className="relative z-10">
+                  <div className="w-14 h-14 bg-[#3fff8b]/20 flex items-center justify-center rounded-2xl mb-8 text-[#3fff8b] group-hover:scale-110 transition-transform duration-300">
+                    <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>anchor</span>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-3" style={{ fontFamily: 'Manrope, sans-serif' }}>Port &amp; Terminal Ops</h3>
+                  <p className="text-[#adaaaa] text-sm leading-relaxed mb-8">
+                    Eliminate vessel queue buildup and berth conflicts. Our digital twin engine mirrors your terminal in real time — scheduling gate slots before congestion forms.
+                  </p>
+                  <ul className="space-y-3 mb-10">
+                    {['Berth window forecasting', 'Container dwell minimisation', 'Port congestion heat-maps'].map(item => (
+                      <li key={item} className="flex items-center gap-3 text-sm text-[#adaaaa]">
+                        <span className="w-5 h-5 rounded-full bg-[#3fff8b]/20 flex items-center justify-center flex-shrink-0">
+                          <span className="material-symbols-outlined text-[#3fff8b]" style={{ fontSize: '12px', fontVariationSettings: "'FILL' 1" }}>check</span>
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex items-center gap-2 text-[#3fff8b] text-xs font-bold uppercase tracking-widest group-hover:gap-4 transition-all" style={{ fontFamily: 'Manrope, sans-serif' }}>
+                    Explore Solution
+                    <span className="material-symbols-outlined text-sm">arrow_right_alt</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3 — Cold Chain */}
+              <div className="group relative bg-[#131313] rounded-3xl p-8 border border-[#494847]/20 hover:border-[#84ecff]/30 transition-all duration-500 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#84ecff]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10">
+                  <div className="w-14 h-14 bg-[#84ecff]/10 flex items-center justify-center rounded-2xl mb-8 text-[#84ecff] group-hover:scale-110 transition-transform duration-300">
+                    <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>ac_unit</span>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-3" style={{ fontFamily: 'Manrope, sans-serif' }}>Cold Chain Integrity</h3>
+                  <p className="text-[#adaaaa] text-sm leading-relaxed mb-8">
+                    Pharmaceutical and perishables demand zero compromise. Continuous temperature telemetry with instant excursion alerts keeps your cargo compliant end-to-end.
+                  </p>
+                  <ul className="space-y-3 mb-10">
+                    {['IoT temp & humidity streams', 'GDP compliance reporting', 'Excursion impact scoring'].map(item => (
+                      <li key={item} className="flex items-center gap-3 text-sm text-[#adaaaa]">
+                        <span className="w-5 h-5 rounded-full bg-[#84ecff]/15 flex items-center justify-center flex-shrink-0">
+                          <span className="material-symbols-outlined text-[#84ecff]" style={{ fontSize: '12px', fontVariationSettings: "'FILL' 1" }}>check</span>
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex items-center gap-2 text-[#84ecff] text-xs font-bold uppercase tracking-widest group-hover:gap-4 transition-all" style={{ fontFamily: 'Manrope, sans-serif' }}>
+                    Explore Solution
+                    <span className="material-symbols-outlined text-sm">arrow_right_alt</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Banner */}
+            <div className="bg-[#131313] rounded-3xl p-10 border border-[#494847]/20 flex flex-col md:flex-row items-center justify-between gap-8">
+              <div className="flex flex-wrap gap-10">
+                {[
+                  { icon: 'inventory_2',   label: 'eCommerce & Retail',    color: '#3fff8b' },
+                  { icon: 'precision_manufacturing', label: 'Automotive Manufacturing', color: '#84ecff' },
+                  { icon: 'vaccines',      label: 'Pharma & Healthcare',   color: '#ff7351' },
+                  { icon: 'agriculture',   label: 'Agri & Food Systems',   color: '#3fff8b' },
+                ].map(({ icon, label, color }) => (
+                  <div key={label} className="flex items-center gap-3">
+                    <span className="material-symbols-outlined" style={{ color, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+                    <span className="text-sm font-bold text-[#adaaaa] uppercase tracking-wider" style={{ fontFamily: 'Manrope, sans-serif' }}>{label}</span>
+                  </div>
+                ))}
+              </div>
+              <button className="flex-shrink-0 border border-[#3fff8b]/40 text-[#3fff8b] px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#3fff8b]/10 transition-all" style={{ fontFamily: 'Manrope, sans-serif' }}>
+                View All Industries
+              </button>
+            </div>
+
           </div>
         </section>
 
