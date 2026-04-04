@@ -71,6 +71,7 @@ export default function LandingPage() {
           </div>
           <div className="hidden md:flex items-center space-x-8">
             <a className="uppercase tracking-wider text-sm font-bold text-[#3fff8b] border-b-2 border-[#3fff8b] pb-1" href="#features" style={{ fontFamily: 'Manrope, sans-serif' }}>Features</a>
+
             <a className="uppercase tracking-wider text-sm font-bold text-gray-400 hover:text-[#3fff8b] transition-colors" href="#solutions" style={{ fontFamily: 'Manrope, sans-serif' }}>Solutions</a>
 
           </div>
