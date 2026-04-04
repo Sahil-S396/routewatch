@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  /* ── Palette ── */
+  --color-primary: #3fff8b;
+  --color-primary-dim: #24f07e;
+  --color-primary-fixed: #3fff8b;
+  --color-primary-fixed-dim: #24f07e;
+  --color-primary-container: #13ea79;
+  --color-on-primary: #005d2c;
+  --color-on-primary-fixed: #004820;
+  --color-on-primary-fixed-variant: #006832;
+  --color-on-primary-container: #004f24;
+  --color-inverse-primary: #006e35;
+
+  --color-secondary: #78f5ae;
+  --color-secondary-dim: #69e6a1;
+  --color-secondary-fixed: #78f5ae;
+  --color-secondary-fixed-dim: #69e6a1;
+  --color-secondary-container: #006d41;
+  --color-on-secondary: #005a35;
+  --color-on-secondary-fixed: #004528;
+  --color-on-secondary-fixed-variant: #00653c;
+  --color-on-secondary-container: #e2ffe8;
+
+  --color-tertiary: #84ecff;
+  --color-tertiary-dim: #00d4ed;
+  --color-tertiary-fixed: #00e3fe;
+  --color-tertiary-fixed-dim: #00d4ed;
+  --color-tertiary-container: #00e3fe;
+  --color-on-tertiary: #005762;
+  --color-on-tertiary-fixed: #003840;
+  --color-on-tertiary-fixed-variant: #005762;
+  --color-on-tertiary-container: #004d57;
+
+  --color-error: #ff7351;
+  --color-error-dim: #d53d18;
+  --color-error-container: #b92902;
+  --color-on-error: #450900;
+  --color-on-error-container: #ffd2c8;
+
+  --color-surface: #0e0e0e;
+  --color-surface-dim: #0e0e0e;
+  --color-surface-bright: #2c2c2c;
+  --color-surface-variant: #262626;
+  --color-surface-tint: #3fff8b;
+  --color-surface-container-lowest: #000000;
+  --color-surface-container-low: #131313;
+  --color-surface-container: #1a1919;
+  --color-surface-container-high: #201f1f;
+  --color-surface-container-highest: #262626;
+  --color-on-surface: #ffffff;
+  --color-on-surface-variant: #adaaaa;
+  --color-inverse-surface: #fcf8f8;
+  --color-inverse-on-surface: #565554;
+
+  --color-background: #0e0e0e;
+  --color-on-background: #ffffff;
+
+  --color-outline: #777575;
+  --color-outline-variant: #494847;
+
+  /* ── Border Radius ── */
+  --radius-DEFAULT: 0.125rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-full: 0.75rem;
+
+  /* ── Font Families ── */
+  --font-headline: 'Manrope', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-label: 'Inter', sans-serif;
+}
+
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { color-scheme: dark; }
+
+body {
+  background-color: #0e0e0e;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ── Material Symbols ── */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+  user-select: none;
+}
+
+/* ── Shared Utilities ── */
+.glass-panel {
+  background: rgba(38, 38, 38, 0.6);
+  backdrop-filter: blur(20px);
+}
+
+.glass-card {
+  background: rgba(38, 38, 38, 0.4);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(63, 255, 139, 0.05);
+}
+
+.ghost-border {
+  border: 1px solid rgba(63, 255, 139, 0.15);
+}
+
+.primary-gradient {
+  background: linear-gradient(135deg, #3fff8b 0%, #13ea79 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(to right, #3fff8b, #13ea79);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.emerald-glow {
+  box-shadow: 0 0 20px rgba(63, 255, 139, 0.2);
+}
+
+.signal-glow {
+  box-shadow: 0 0 20px rgba(63, 255, 139, 0.15);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #262626; border-radius: 10px; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Animations ── */
+@keyframes pulse-red-anim {
+  0%   { transform: scale(1);   opacity: 1;   box-shadow: 0 0 0 0 rgba(255, 115, 81, 0.7); }
+  70%  { transform: scale(1.1); opacity: 0.8; box-shadow: 0 0 0 10px rgba(255, 115, 81, 0); }
+  100% { transform: scale(1);   opacity: 1;   box-shadow: 0 0 0 0 rgba(255, 115, 81, 0); }
+}
+.pulse-red { animation: pulse-red-anim 2s infinite; }
