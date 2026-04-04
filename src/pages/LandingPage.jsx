@@ -1,11 +1,47 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { auth, provider, signInWithPopup } from '../lib/firebase'
+import { auth, provider, signInWithPopup, db } from '../lib/firebase'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 
 export default function LandingPage() {
-  const navigate   = useNavigate()
-  const [loading,  setLoading]  = useState(false)
+  const navigate    = useNavigate()
+  const [loading,   setLoading]   = useState(false)
   const [authError, setAuthError] = useState('')
+
+  // ── Demo Modal State ──
+  const [demoOpen,    setDemoOpen]    = useState(false)
+  const [demoForm,    setDemoForm]    = useState({ fullName: '', email: '', company: '', message: '' })
+  const [demoLoading, setDemoLoading] = useState(false)
+  const [demoSuccess, setDemoSuccess] = useState(false)
+  const [demoError,   setDemoError]   = useState('')
+
+  const openDemo  = () => { setDemoOpen(true); setDemoSuccess(false); setDemoError(''); setDemoForm({ fullName: '', email: '', company: '', message: '' }) }
+  const closeDemo = () => { setDemoOpen(false) }
+
+  const handleDemoChange = (e) => {
+    setDemoForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  const handleDemoSubmit = async (e) => {
+    e.preventDefault()
+    setDemoLoading(true)
+    setDemoError('')
+    try {
+      await addDoc(collection(db, 'demo_requests'), {
+        fullName:  demoForm.fullName.trim(),
+        email:     demoForm.email.trim(),
+        company:   demoForm.company.trim(),
+        message:   demoForm.message.trim(),
+        timestamp: serverTimestamp(),
+      })
+      setDemoSuccess(true)
+    } catch (err) {
+      console.error(err)
+      setDemoError('Something went wrong. Please try again.')
+    } finally {
+      setDemoLoading(false)
+    }
+  }
 
   const handleGoogleSignIn = async () => {
     setLoading(true)
@@ -105,7 +141,12 @@ export default function LandingPage() {
                     </>
                   )}
                 </button>
-                <button className="border border-[#494847]/30 hover:bg-[#262626] px-8 py-4 rounded-xl font-bold transition-all active:scale-95" style={{ fontFamily: 'Manrope, sans-serif' }}>
+                <button
+                  id="request-demo-btn"
+                  onClick={openDemo}
+                  className="border border-[#3fff8b]/30 hover:bg-[#3fff8b]/10 px-8 py-4 rounded-xl font-bold transition-all active:scale-95 text-[#3fff8b]"
+                  style={{ fontFamily: 'Manrope, sans-serif' }}
+                >
                   Request Demo
                 </button>
               </div>
@@ -395,6 +436,154 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* ── Demo Request Modal ── */}
+      {demoOpen && (
+        <div
+          className="fixed inset-0 z-[999] flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) closeDemo() }}
+        >
+          <div
+            className="relative w-full max-w-lg rounded-3xl border border-[#3fff8b]/20 shadow-2xl"
+            style={{
+              background: 'linear-gradient(135deg, #1a1919 0%, #131313 100%)',
+              boxShadow: '0 0 80px rgba(63,255,139,0.08)',
+            }}
+          >
+            {/* Close button */}
+            <button
+              id="demo-modal-close"
+              onClick={closeDemo}
+              className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-[#262626] hover:bg-[#333] text-gray-400 hover:text-white transition-all"
+              aria-label="Close modal"
+            >
+              <span className="material-symbols-outlined text-lg">close</span>
+            </button>
+
+            <div className="p-8 md:p-10">
+              {/* Header */}
+              <div className="mb-8">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#3fff8b]/10 text-[#3fff8b] rounded-full mb-4 border border-[#3fff8b]/20">
+                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>schedule_send</span>
+                  <span className="text-xs font-bold tracking-widest uppercase" style={{ fontFamily: 'Manrope, sans-serif' }}>Quick Response</span>
+                </div>
+                <h2 className="text-3xl font-extrabold tracking-tighter text-white" style={{ fontFamily: 'Manrope, sans-serif' }}>Request a Demo</h2>
+                <p className="text-[#adaaaa] text-sm mt-2">Fill in your details and we'll set up a personalized walkthrough.</p>
+              </div>
+
+              {demoSuccess ? (
+                /* Success state */
+                <div className="flex flex-col items-center text-center py-8 gap-4">
+                  <div className="w-16 h-16 rounded-full bg-[#3fff8b]/15 flex items-center justify-center border border-[#3fff8b]/30">
+                    <span className="material-symbols-outlined text-[#3fff8b] text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                  </div>
+                  <p className="text-white text-lg font-bold" style={{ fontFamily: 'Manrope, sans-serif' }}>Thanks! We'll reach out soon.</p>
+                  <p className="text-[#adaaaa] text-sm">Keep an eye on your inbox — our team will be in touch within 24 hours.</p>
+                  <button
+                    onClick={closeDemo}
+                    className="mt-4 px-8 py-3 rounded-xl bg-[#3fff8b] text-[#005d2c] font-bold uppercase tracking-wide text-sm hover:opacity-90 transition-all"
+                    style={{ fontFamily: 'Manrope, sans-serif' }}
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                /* Form */
+                <form onSubmit={handleDemoSubmit} className="space-y-5">
+                  {/* Full Name */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-[#adaaaa] mb-2" htmlFor="demo-fullName">Full Name</label>
+                    <input
+                      id="demo-fullName"
+                      name="fullName"
+                      type="text"
+                      required
+                      value={demoForm.fullName}
+                      onChange={handleDemoChange}
+                      placeholder="Jane Smith"
+                      className="w-full px-4 py-3 rounded-xl bg-[#0e0e0e] border border-[#494847]/40 text-white placeholder-[#555] focus:outline-none focus:border-[#3fff8b]/60 focus:ring-1 focus:ring-[#3fff8b]/30 transition-all text-sm"
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-[#adaaaa] mb-2" htmlFor="demo-email">Email</label>
+                    <input
+                      id="demo-email"
+                      name="email"
+                      type="email"
+                      required
+                      value={demoForm.email}
+                      onChange={handleDemoChange}
+                      placeholder="jane@company.com"
+                      className="w-full px-4 py-3 rounded-xl bg-[#0e0e0e] border border-[#494847]/40 text-white placeholder-[#555] focus:outline-none focus:border-[#3fff8b]/60 focus:ring-1 focus:ring-[#3fff8b]/30 transition-all text-sm"
+                    />
+                  </div>
+
+                  {/* Company */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-[#adaaaa] mb-2" htmlFor="demo-company">Company / Organization</label>
+                    <input
+                      id="demo-company"
+                      name="company"
+                      type="text"
+                      required
+                      value={demoForm.company}
+                      onChange={handleDemoChange}
+                      placeholder="Acme Logistics Corp"
+                      className="w-full px-4 py-3 rounded-xl bg-[#0e0e0e] border border-[#494847]/40 text-white placeholder-[#555] focus:outline-none focus:border-[#3fff8b]/60 focus:ring-1 focus:ring-[#3fff8b]/30 transition-all text-sm"
+                    />
+                  </div>
+
+                  {/* Message */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-[#adaaaa] mb-2" htmlFor="demo-message">Tell us about your use case</label>
+                    <textarea
+                      id="demo-message"
+                      name="message"
+                      rows={4}
+                      value={demoForm.message}
+                      onChange={handleDemoChange}
+                      placeholder="We manage 500+ shipments across Southeast Asia and need real-time disruption alerts..."
+                      className="w-full px-4 py-3 rounded-xl bg-[#0e0e0e] border border-[#494847]/40 text-white placeholder-[#555] focus:outline-none focus:border-[#3fff8b]/60 focus:ring-1 focus:ring-[#3fff8b]/30 transition-all text-sm resize-none"
+                    />
+                  </div>
+
+                  {/* Error */}
+                  {demoError && (
+                    <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-[#ff7351]/10 border border-[#ff7351]/30 text-[#ff7351] text-sm">
+                      <span className="material-symbols-outlined text-sm">error</span>
+                      {demoError}
+                    </div>
+                  )}
+
+                  {/* Submit */}
+                  <button
+                    id="demo-submit-btn"
+                    type="submit"
+                    disabled={demoLoading}
+                    className="w-full py-4 rounded-xl bg-gradient-to-r from-[#3fff8b] to-[#13ea79] text-[#005d2c] font-black uppercase tracking-wide text-sm hover:opacity-90 active:scale-95 transition-all shadow-[0_0_30px_rgba(63,255,139,0.2)] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    style={{ fontFamily: 'Manrope, sans-serif' }}
+                  >
+                    {demoLoading ? (
+                      <>
+                        <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                        Sending…
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
+                        Submit Request
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
