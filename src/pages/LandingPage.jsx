@@ -7,6 +7,7 @@ export default function LandingPage() {
   const navigate    = useNavigate()
   const [loading,   setLoading]   = useState(false)
   const [authError, setAuthError] = useState('')
+  const [activeNav,  setActiveNav]  = useState('features')
 
   // ── Demo Modal State ──
   const [demoOpen,    setDemoOpen]    = useState(false)
@@ -70,9 +71,31 @@ export default function LandingPage() {
             RouteWatch
           </div>
           <div className="hidden md:flex items-center space-x-8">
-            <a className="uppercase tracking-wider text-sm font-bold text-[#3fff8b] border-b-2 border-[#3fff8b] pb-1" href="#features" style={{ fontFamily: 'Manrope, sans-serif' }}>Features</a>
+            <a
+              className={`uppercase tracking-wider text-sm font-bold transition-colors ${
+                activeNav === 'features'
+                  ? 'text-[#3fff8b] border-b-2 border-[#3fff8b] pb-1'
+                  : 'text-gray-400 hover:text-[#3fff8b]'
+              }`}
+              href="#features"
+              onClick={() => setActiveNav('features')}
+              style={{ fontFamily: 'Manrope, sans-serif' }}
+            >
+              Features
+            </a>
 
-            <a className="uppercase tracking-wider text-sm font-bold text-gray-400 hover:text-[#3fff8b] transition-colors" href="#solutions" style={{ fontFamily: 'Manrope, sans-serif' }}>Solutions</a>
+            <a
+              className={`uppercase tracking-wider text-sm font-bold transition-colors ${
+                activeNav === 'solutions'
+                  ? 'text-[#3fff8b] border-b-2 border-[#3fff8b] pb-1'
+                  : 'text-gray-400 hover:text-[#3fff8b]'
+              }`}
+              href="#solutions"
+              onClick={() => setActiveNav('solutions')}
+              style={{ fontFamily: 'Manrope, sans-serif' }}
+            >
+              Solutions
+            </a>
 
           </div>
           <div className="flex items-center gap-4">
