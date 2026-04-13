@@ -1,14 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  collection, query, where, orderBy, limit,
-  getDocs, doc, updateDoc, getDoc,
+  collection, query, orderBy, limit,
+  getDocs, doc, updateDoc, getDoc, where,
 } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import AppLayout from '../components/AppLayout'
 import Toast from '../components/Toast'
 
-// Maps disruptionType string to a material icon name
 const TYPE_ICON = {
   'Weather':          'rainy',
   'Natural Disaster': 'volcano',
@@ -16,27 +15,117 @@ const TYPE_ICON = {
   'None':             'check_circle',
 }
 
+// ── Reroute Success Modal ────────────────────────────────────────────────────
+function RerouteSuccessModal({ alert, onGoToDashboard }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+      <div
+        className="relative bg-[#0f1a12] border border-[#3fff8b]/30 rounded-2xl p-10 max-w-lg w-full mx-4 shadow-[0_0_80px_rgba(63,255,139,0.15)]"
+        style={{ animation: 'modalIn 0.35s cubic-bezier(0.34,1.56,0.64,1)' }}
+      >
+        <style>{`
+          @keyframes modalIn {
+            from { opacity:0; transform:scale(0.88) translateY(20px); }
+            to   { opacity:1; transform:scale(1)    translateY(0);     }
+          }
+          @keyframes checkPop {
+            0%   { transform:scale(0) rotate(-15deg); opacity:0; }
+            70%  { transform:scale(1.15) rotate(4deg); }
+            100% { transform:scale(1) rotate(0deg); opacity:1; }
+          }
+        `}</style>
+
+        {/* Glowing checkmark */}
+        <div className="flex justify-center mb-6">
+          <div
+            className="w-20 h-20 rounded-full bg-[#3fff8b]/10 border-2 border-[#3fff8b] flex items-center justify-center"
+            style={{ animation: 'checkPop 0.5s 0.1s both cubic-bezier(0.34,1.56,0.64,1)' }}
+          >
+            <span className="material-symbols-outlined text-[#3fff8b] text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+              check_circle
+            </span>
+          </div>
+        </div>
+
+        <h2 className="text-2xl font-extrabold text-center text-white mb-1" style={{ fontFamily: 'Manrope, sans-serif' }}>
+          Reroute Successfully Applied
+        </h2>
+        <p className="text-center text-[#adaaaa] text-sm mb-8">
+          The shipment has been redirected to the alternative corridor.
+        </p>
+
+        <div className="space-y-3 mb-8">
+          <div className="bg-[#1a2a1d] rounded-xl p-4 flex items-start gap-3">
+            <span className="material-symbols-outlined text-[#ff7351] text-sm mt-0.5">remove_road</span>
+            <div>
+              <p className="text-[10px] text-[#adaaaa] uppercase tracking-widest font-bold mb-0.5">Original Route</p>
+              <p className="text-white font-semibold">
+                {alert.origin} → {alert.destination}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-[#1a2a1d] rounded-xl p-4 flex items-start gap-3">
+            <span className="material-symbols-outlined text-[#3fff8b] text-sm mt-0.5">alt_route</span>
+            <div>
+              <p className="text-[10px] text-[#adaaaa] uppercase tracking-widest font-bold mb-0.5">New Route</p>
+              <p className="text-white font-semibold">{alert.recommendedRoute ?? 'Alternative route active'}</p>
+            </div>
+          </div>
+
+          <div className="bg-[#1a2a1d] rounded-xl p-4 flex items-start gap-3">
+            <span className="material-symbols-outlined text-yellow-400 text-sm mt-0.5">schedule</span>
+            <div>
+              <p className="text-[10px] text-[#adaaaa] uppercase tracking-widest font-bold mb-0.5">ETA Impact</p>
+              <p className="text-yellow-400 font-bold text-lg" style={{ fontFamily: 'Manrope, sans-serif' }}>
+                {alert.etaDifference ?? 'See updated ETA'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={onGoToDashboard}
+          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#3fff8b] to-[#13ea79] text-[#005d2c] font-bold text-sm flex items-center justify-center gap-2 hover:shadow-[0_4px_24px_rgba(63,255,139,0.4)] transition-all"
+        >
+          <span className="material-symbols-outlined text-sm">dashboard</span>
+          Go to Dashboard
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+
 export default function AlertDetail() {
   const navigate       = useNavigate()
   const [searchParams] = useSearchParams()
-  const queryId        = searchParams.get('id') // e.g. #EV-8902 or firestoreId
+  const queryId        = searchParams.get('id')
+  const routeIdParam   = searchParams.get('routeId') // e.g. RW-XXXX from Route Management
 
-  const [alert,      setAlert]      = useState(null)
-  const [alertDocId, setAlertDocId] = useState(null)
-  const [loading,    setLoading]    = useState(true)
-  const [dismissing, setDismissing] = useState(false)
-  const [rerouting,  setRerouting]  = useState(false)
-  const [toast,      setToast]      = useState(null)
+  const [alert,         setAlert]         = useState(null)
+  const [alertDocId,    setAlertDocId]    = useState(null)
+  const [loading,       setLoading]       = useState(true)
+  const [dismissing,    setDismissing]    = useState(false)
+  const [rerouting,     setRerouting]     = useState(false)
+  const [toast,         setToast]         = useState(null)
+  const [rerouteModal,  setRerouteModal]  = useState(false)
 
-  // ── Fetch the most recent active alert (or the one from queryId) ──────────
+  const toastTimerRef = useRef(null)
+
+  function showToast(message, type = 'success') {
+    clearTimeout(toastTimerRef.current)
+    setToast({ message, type })
+  }
+
+  // ── Fetch alert ───────────────────────────────────────────────────────────
   useEffect(() => {
     async function loadAlert() {
       setLoading(true)
       try {
-        let snap = null
-
+        // 1. Firestore doc ID lookup (?id=<docId>)
         if (queryId) {
-          // Try treating queryId as a Firestore doc ID first
           const direct = await getDoc(doc(db, 'alerts', queryId))
           if (direct.exists()) {
             setAlert({ id: direct.id, ...direct.data() })
@@ -44,12 +133,17 @@ export default function AlertDetail() {
             setLoading(false)
             return
           }
-          // Else try matching on routeId or alertTitle field
+        }
+
+        // 2. routeId param lookup (?routeId=RW-XXXX) — from RoutesManagement
+        const lookupId = routeIdParam ?? queryId
+        if (lookupId) {
           const byRoute = await getDocs(
-            query(collection(db, 'alerts'),
-              where('routeId', '==', queryId),
+            query(
+              collection(db, 'alerts'),
+              where('routeId', '==', lookupId),
               orderBy('createdAt', 'desc'),
-              limit(1)
+              limit(1),
             )
           )
           if (!byRoute.empty) {
@@ -61,12 +155,12 @@ export default function AlertDetail() {
           }
         }
 
-        // Fall back: most recent active alert
-        snap = await getDocs(
-          query(collection(db, 'alerts'),
-            where('status', '==', 'active'),
+        // 3. Fall back: most recent alert of ANY status
+        const snap = await getDocs(
+          query(
+            collection(db, 'alerts'),
             orderBy('createdAt', 'desc'),
-            limit(1)
+            limit(1),
           )
         )
         if (!snap.empty) {
@@ -84,7 +178,7 @@ export default function AlertDetail() {
       }
     }
     loadAlert()
-  }, [queryId])
+  }, [queryId, routeIdParam])
 
   // ── Dismiss ───────────────────────────────────────────────────────────────
   const handleDismiss = async () => {
@@ -95,10 +189,11 @@ export default function AlertDetail() {
         status:    'dismissed',
         updatedAt: new Date().toISOString(),
       })
-      navigate('/dashboard')
+      showToast('Alert dismissed', 'info')
+      setTimeout(() => navigate('/dashboard'), 1500)
     } catch (err) {
       console.error(err)
-      setToast({ message: 'Failed to dismiss alert.', type: 'error' })
+      showToast('Failed to dismiss alert.', 'error')
     } finally {
       setDismissing(false)
     }
@@ -109,38 +204,56 @@ export default function AlertDetail() {
     if (!alertDocId) return
     setRerouting(true)
     try {
-      // Update alert status
+      // 1. Mark alert as rerouted
       await updateDoc(doc(db, 'alerts', alertDocId), {
         status:    'rerouted',
         updatedAt: new Date().toISOString(),
       })
-      // Also update the linked route if we have a routeId
+
+      // 2. Update the linked route (best-effort)
       if (alert?.routeId) {
-        const routeSnap = await getDocs(
-          query(collection(db, 'routes'), where('id', '==', alert.routeId), limit(1))
-        )
-        if (!routeSnap.empty) {
-          await updateDoc(routeSnap.docs[0].ref, { status: 'rerouted' })
+        try {
+          const routeRef  = doc(db, 'routes', alert.routeId)
+          const routeSnap = await getDoc(routeRef)
+          if (routeSnap.exists()) {
+            await updateDoc(routeRef, {
+              status:    'REROUTED',
+              riskScore: alert.severityScore ?? 0,
+              updatedAt: new Date().toISOString(),
+            })
+          } else {
+            const byField = await getDocs(
+              query(collection(db, 'routes'), where('id', '==', alert.routeId), limit(1))
+            )
+            if (!byField.empty) {
+              await updateDoc(byField.docs[0].ref, {
+                status:    'REROUTED',
+                riskScore: alert.severityScore ?? 0,
+                updatedAt: new Date().toISOString(),
+              })
+            }
+          }
+        } catch (routeErr) {
+          console.warn('Route update skipped:', routeErr.message)
         }
       }
-      setToast({ message: 'Reroute applied successfully — Alternative route is now active.', type: 'success' })
+
+      // 3. Show success modal instead of navigating immediately
+      setRerouteModal(true)
     } catch (err) {
       console.error(err)
-      setToast({ message: 'Failed to apply reroute. Please try again.', type: 'error' })
+      showToast('Failed to apply reroute. Please try again.', 'error')
     } finally {
       setRerouting(false)
     }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-
-  // Derived display values (fall back to static mock if no Firestore data yet)
-  const a = alert ?? {}
-  const icon          = TYPE_ICON[a.disruptionType] ?? 'warning'
-  const severity      = a.severityScore ?? 85
-  const pct           = Math.min(100, Math.max(0, severity))
-  // Rotate the progress arc so 100% = full semicircle (0→180deg)
-  const arcRotation   = 45 + (pct / 100) * 180
+  const a           = alert ?? {}
+  const icon        = TYPE_ICON[a.disruptionType] ?? 'warning'
+  const severity    = a.severityScore ?? 85
+  const pct         = Math.min(100, Math.max(0, severity))
+  const arcRotation = 45 + (pct / 100) * 180
 
   return (
     <>
@@ -161,7 +274,7 @@ export default function AlertDetail() {
           {!loading && !alert && (
             <div className="flex flex-col items-center justify-center h-64 gap-4 text-white/40">
               <span className="material-symbols-outlined text-5xl">notifications_off</span>
-              <p className="font-bold">No active alerts found.</p>
+              <p className="font-bold">No alerts found{routeIdParam ? ` for route ${routeIdParam}` : ''}.</p>
               <button onClick={() => navigate('/dashboard')} className="text-[#3fff8b] text-sm font-bold hover:underline">
                 → Back to Dashboard
               </button>
@@ -184,12 +297,20 @@ export default function AlertDetail() {
                   {a.origin && a.destination && (
                     <p className="text-white/40 text-sm">{a.origin} → {a.destination}</p>
                   )}
+                  {a.status && a.status !== 'active' && (
+                    <span className={`inline-block px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest ${
+                      a.status === 'rerouted'  ? 'bg-[#3fff8b]/10 text-[#3fff8b]' :
+                      a.status === 'dismissed' ? 'bg-gray-800 text-gray-400' : ''
+                    }`}>
+                      {a.status}
+                    </span>
+                  )}
                 </div>
                 <div className="flex gap-4">
                   <button
                     id="dismiss-alert-btn"
                     onClick={handleDismiss}
-                    disabled={dismissing || rerouting}
+                    disabled={dismissing || rerouting || a.status === 'dismissed'}
                     className="px-6 py-3 rounded-lg border border-[#3fff8b]/30 text-[#3fff8b] font-bold hover:bg-[#3fff8b]/5 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {dismissing
@@ -199,7 +320,7 @@ export default function AlertDetail() {
                   <button
                     id="apply-reroute-btn"
                     onClick={handleReroute}
-                    disabled={dismissing || rerouting}
+                    disabled={dismissing || rerouting || a.status === 'rerouted'}
                     className="px-8 py-3 rounded-lg bg-gradient-to-r from-[#3fff8b] to-[#13ea79] text-[#005d2c] font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0_4px_20px_rgba(63,255,139,0.3)] transition-all"
                   >
                     {rerouting
@@ -246,12 +367,12 @@ export default function AlertDetail() {
                   </div>
                 </div>
 
-                {/* Right col: AI explanation + reroute recommendation */}
+                {/* Right col */}
                 <div className="lg:col-span-8 flex flex-col gap-6">
                   <div className="bg-[#131313] p-8 rounded-xl border border-[#262626]/40 relative overflow-hidden flex-1">
                     <div className="absolute top-0 right-0 p-4">
                       <span className="px-3 py-1 bg-[#3fff8b]/10 text-[#3fff8b] text-[10px] font-bold rounded-full border border-[#3fff8b]/20">
-                        GEMINI AI
+                        AI ANALYSIS
                       </span>
                     </div>
                     <h4 className="text-white font-bold mb-4 flex items-center gap-2" style={{ fontFamily: 'Manrope, sans-serif' }}>
@@ -287,7 +408,7 @@ export default function AlertDetail() {
                   </div>
                 </div>
 
-                {/* SVG Map */}
+                {/* Map strip */}
                 <div className="lg:col-span-12 h-[400px] bg-[#131313] rounded-xl border border-[#262626]/40 overflow-hidden relative">
                   <div className="absolute inset-0 flex items-center justify-center p-12">
                     <svg className="w-full h-full" viewBox="0 0 800 400">
@@ -319,6 +440,14 @@ export default function AlertDetail() {
           )}
         </div>
       </AppLayout>
+
+      {/* Reroute success modal */}
+      {rerouteModal && alert && (
+        <RerouteSuccessModal
+          alert={alert}
+          onGoToDashboard={() => navigate('/dashboard')}
+        />
+      )}
 
       {toast && (
         <Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />
