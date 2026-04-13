@@ -126,7 +126,7 @@ export default function RoutesManagement() {
     : 94.2
 
   // ── Row actions ───────────────────────────────────────────────────────────
-  const handleViewAlert  = (route) => navigate(`/alerts?id=${encodeURIComponent(route.id)}`)
+  const handleViewAlert  = (route) => navigate(`/alerts?routeId=${encodeURIComponent(route.id)}`)
   const handleMarkResolved = async (firestoreId) => {
     try {
       await updateDoc(doc(db, 'routes', firestoreId), { status: 'On-Time', risk: 0 })
