@@ -21,6 +21,7 @@ export default function NewRouteModal({ open, onClose, onRouteCreated }) {
   const [routeId,     setRouteId]     = useState('')
   const [phase,       setPhase]       = useState(0)   // 0 = idle, 1 = saving, 2 = analyzing, 3 = done
   const [error,       setError]       = useState('')
+  const [deferred,    setDeferred]    = useState(false) // true when Gemini quota hit
   const overlayRef = useRef(null)
 
   const loading = phase > 0 && phase < 3
@@ -32,6 +33,7 @@ export default function NewRouteModal({ open, onClose, onRouteCreated }) {
       setDestination('')
       setError('')
       setPhase(0)
+      setDeferred(false)
     }
   }, [open])
 
@@ -81,14 +83,19 @@ export default function NewRouteModal({ open, onClose, onRouteCreated }) {
     // ── Phase 2: Run AI disruption analysis ──
     setPhase(2)
     try {
-      const { result } = await analyzeRoute(routeId, origin.trim(), destination.trim())
-      riskScore = result.severityScore ?? 0
+      const { result, needsAnalysis } = await analyzeRoute(routeId, origin.trim(), destination.trim())
 
-      // Back-fill risk score onto the route doc
-      await updateDoc(doc(db, 'routes', firestoreId), {
-        risk:   riskScore,
-        status: result.disruptionDetected ? 'Disrupted' : 'On-Time',
-      })
+      if (needsAnalysis) {
+        // Gemini quota exhausted — flag the route for a later retry
+        setDeferred(true)
+        await updateDoc(doc(db, 'routes', firestoreId), { needsAnalysis: true })
+      } else {
+        riskScore = result.severityScore ?? 0
+        await updateDoc(doc(db, 'routes', firestoreId), {
+          risk:   riskScore,
+          status: result.disruptionDetected ? 'Disrupted' : 'On-Time',
+        })
+      }
     } catch (err) {
       // Non-fatal: analysis failed but route was saved
       console.warn('Disruption analysis failed (route still saved):', err)
@@ -178,14 +185,18 @@ export default function NewRouteModal({ open, onClose, onRouteCreated }) {
         {phase === 3 && (
           <div className="px-8 py-10 flex flex-col items-center gap-4 text-center">
             <span
-              className="material-symbols-outlined text-5xl text-[#3fff8b]"
+              className={`material-symbols-outlined text-5xl ${deferred ? 'text-yellow-400' : 'text-[#3fff8b]'}`}
               style={{ fontVariationSettings: "'FILL' 1" }}
             >
-              check_circle
+              {deferred ? 'schedule' : 'check_circle'}
             </span>
             <div>
               <p className="text-white font-bold" style={{ fontFamily: 'Manrope, sans-serif' }}>Route Created!</p>
-              <p className="text-white/40 text-xs mt-1">AI analysis complete. Check the Alerts page.</p>
+              <p className="text-white/40 text-xs mt-1">
+                {deferred
+                  ? 'Route saved. AI analysis will run shortly.'
+                  : 'AI analysis complete. Check the Alerts page.'}
+              </p>
             </div>
           </div>
         )}

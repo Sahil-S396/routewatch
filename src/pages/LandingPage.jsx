@@ -324,10 +324,6 @@ export default function LandingPage() {
                       </li>
                     ))}
                   </ul>
-                  <div className="flex items-center gap-2 text-[#3fff8b] text-xs font-bold uppercase tracking-widest group-hover:gap-4 transition-all" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                    Explore Solution
-                    <span className="material-symbols-outlined text-sm">arrow_right_alt</span>
-                  </div>
                 </div>
               </div>
 
@@ -355,10 +351,6 @@ export default function LandingPage() {
                       </li>
                     ))}
                   </ul>
-                  <div className="flex items-center gap-2 text-[#3fff8b] text-xs font-bold uppercase tracking-widest group-hover:gap-4 transition-all" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                    Explore Solution
-                    <span className="material-symbols-outlined text-sm">arrow_right_alt</span>
-                  </div>
                 </div>
               </div>
 
@@ -383,10 +375,6 @@ export default function LandingPage() {
                       </li>
                     ))}
                   </ul>
-                  <div className="flex items-center gap-2 text-[#84ecff] text-xs font-bold uppercase tracking-widest group-hover:gap-4 transition-all" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                    Explore Solution
-                    <span className="material-symbols-outlined text-sm">arrow_right_alt</span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -406,9 +394,14 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-              <button className="flex-shrink-0 border border-[#3fff8b]/40 text-[#3fff8b] px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#3fff8b]/10 transition-all" style={{ fontFamily: 'Manrope, sans-serif' }}>
+              <Link
+                to="/industries"
+                className="flex-shrink-0 inline-flex items-center gap-2 border border-[#3fff8b]/40 text-[#3fff8b] px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#3fff8b]/10 transition-all"
+                style={{ fontFamily: 'Manrope, sans-serif' }}
+              >
                 View All Industries
-              </button>
+                <span className="material-symbols-outlined text-sm">arrow_right_alt</span>
+              </Link>
             </div>
 
           </div>
