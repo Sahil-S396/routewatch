@@ -394,9 +394,14 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-              <button className="flex-shrink-0 border border-[#3fff8b]/40 text-[#3fff8b] px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#3fff8b]/10 transition-all" style={{ fontFamily: 'Manrope, sans-serif' }}>
+              <Link
+                to="/industries"
+                className="flex-shrink-0 inline-flex items-center gap-2 border border-[#3fff8b]/40 text-[#3fff8b] px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#3fff8b]/10 transition-all"
+                style={{ fontFamily: 'Manrope, sans-serif' }}
+              >
                 View All Industries
-              </button>
+                <span className="material-symbols-outlined text-sm">arrow_right_alt</span>
+              </Link>
             </div>
 
           </div>
