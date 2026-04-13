@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { auth, provider, signInWithPopup, db } from '../lib/firebase'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
@@ -14,6 +14,48 @@ export default function LandingPage() {
   const [demoLoading, setDemoLoading] = useState(false)
   const [demoSuccess, setDemoSuccess] = useState(false)
   const [demoError,   setDemoError]   = useState('')
+
+  // ── Active Nav Section ──
+  const [activeSection, setActiveSection] = useState('')
+  const observerRef = useRef(null)
+
+  useEffect(() => {
+    const sections = ['features', 'solutions']
+    const elements = sections.map(id => document.getElementById(id)).filter(Boolean)
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        // Find the entry with the largest intersection ratio that is intersecting
+        const visible = entries
+          .filter(e => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+        if (visible.length > 0) {
+          setActiveSection(visible[0].target.id)
+        }
+      },
+      { threshold: [0.2, 0.5], rootMargin: '-80px 0px 0px 0px' }
+    )
+
+    elements.forEach(el => observerRef.current.observe(el))
+
+    return () => {
+      if (observerRef.current) observerRef.current.disconnect()
+    }
+  }, [])
+
+  const scrollToSection = (e, id) => {
+    e.preventDefault()
+    const el = document.getElementById(id)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      setActiveSection(id)
+    }
+  }
+
+  const navLinkClass = (id) =>
+    id === activeSection
+      ? 'uppercase tracking-wider text-sm font-bold text-[#3fff8b] border-b-2 border-[#3fff8b] pb-1 transition-all duration-300'
+      : 'uppercase tracking-wider text-sm font-bold text-gray-400 hover:text-[#3fff8b] transition-all duration-300 pb-1 border-b-2 border-transparent'
 
   const openDemo  = () => { setDemoOpen(true); setDemoSuccess(false); setDemoError(''); setDemoForm({ fullName: '', email: '', company: '', message: '' }) }
   const closeDemo = () => { setDemoOpen(false) }
@@ -70,10 +112,22 @@ export default function LandingPage() {
             RouteWatch
           </div>
           <div className="hidden md:flex items-center space-x-8">
-            <a className="uppercase tracking-wider text-sm font-bold text-[#3fff8b] border-b-2 border-[#3fff8b] pb-1" href="#features" style={{ fontFamily: 'Manrope, sans-serif' }}>Features</a>
-
-            <a className="uppercase tracking-wider text-sm font-bold text-gray-400 hover:text-[#3fff8b] transition-colors" href="#solutions" style={{ fontFamily: 'Manrope, sans-serif' }}>Solutions</a>
-
+            <a
+              className={navLinkClass('features')}
+              href="#features"
+              onClick={(e) => scrollToSection(e, 'features')}
+              style={{ fontFamily: 'Manrope, sans-serif' }}
+            >
+              Features
+            </a>
+            <a
+              className={navLinkClass('solutions')}
+              href="#solutions"
+              onClick={(e) => scrollToSection(e, 'solutions')}
+              style={{ fontFamily: 'Manrope, sans-serif' }}
+            >
+              Solutions
+            </a>
           </div>
           <div className="flex items-center gap-4">
             <button
