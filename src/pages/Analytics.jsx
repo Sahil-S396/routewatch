@@ -5,22 +5,40 @@ import {
 } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import AppLayout from '../components/AppLayout'
-import {
-  ComposableMap,
-  Geographies,
-  Geography,
-  Marker,
-  ZoomableGroup,
-} from 'react-simple-maps'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import L from 'leaflet'
 
-const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
+// Fix Default Leaflet marker icon issues
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+})
+
+const createCircleIcon = (color, isCritical) => L.divIcon({
+  className: 'custom-dot',
+  html: `<div style="
+    background-color: ${color}; 
+    width: 14px; 
+    height: 14px; 
+    border-radius: 50%; 
+    border: 2px solid white; 
+    box-shadow: 0 0 10px ${color};
+    ${isCritical ? 'animation: pulse 2s infinite;' : ''}
+  "></div>`,
+  iconSize: [14, 14],
+  iconAnchor: [7, 7]
+})
+
+
 
 // Hardcoded global risk hotspots
 const HOTSPOTS = [
   {
     id:     'bay-of-bengal',
     label:  'Bay of Bengal',
-    coords: [89, 15],
+    coords: [15, 89], // Leaflet is lat, lng
     risk:   'CRITICAL',
     color:  '#ff7351',
     pulse:  true,
@@ -29,7 +47,7 @@ const HOTSPOTS = [
   {
     id:     'north-sea',
     label:  'North Sea',
-    coords: [3, 56],
+    coords: [56, 3], // Leaflet is lat, lng
     risk:   'MODERATE',
     color:  '#f59e0b',
     pulse:  false,
@@ -38,7 +56,7 @@ const HOTSPOTS = [
   {
     id:     'south-china-sea',
     label:  'South China Sea',
-    coords: [115, 14],
+    coords: [14, 115], // Leaflet is lat, lng
     risk:   'LOW RISK',
     color:  '#3fff8b',
     pulse:  false,
@@ -286,83 +304,32 @@ export default function Analytics() {
               ) : null
             })()}
 
-            {/* Map */}
             <div className="w-full h-[500px]" onClick={() => setSelectedSpot(null)}>
-              <ComposableMap
-                projection="geoMercator"
-                projectionConfig={{ scale: 130, center }}
+              <MapContainer 
+                center={center} 
+                zoom={zoom} 
                 style={{ width: '100%', height: '100%', background: '#0d0d0d' }}
+                zoomControl={false}
+                attributionControl={false}
               >
-                <ZoomableGroup
-                  zoom={zoom}
-                  center={center}
-                  onMoveEnd={({ zoom: z, coordinates }) => {
-                    setZoom(z)
-                    setCenter(coordinates)
-                  }}
-                >
-                  <Geographies geography={GEO_URL}>
-                    {({ geographies }) =>
-                      geographies.map(geo => (
-                        <Geography
-                          key={geo.rsmKey}
-                          geography={geo}
-                          style={{
-                            default: { fill: '#1c1c1c', stroke: '#2d2d2d', strokeWidth: 0.5, outline: 'none' },
-                            hover:   { fill: '#232323', stroke: '#3fff8b', strokeWidth: 0.5, outline: 'none' },
-                            pressed: { fill: '#1c1c1c', outline: 'none' },
-                          }}
-                        />
-                      ))
-                    }
-                  </Geographies>
-
-                  {HOTSPOTS.map((spot) => (
-                    <Marker
-                      key={spot.id}
-                      coordinates={spot.coords}
-                      onClick={(e) => { e.stopPropagation(); setSelectedSpot(s => s === spot.id ? null : spot.id) }}
-                    >
-                      {/* Outer pulse ring for CRITICAL */}
-                      {spot.pulse && (
-                        <circle r={18 / zoom} fill={spot.color} fillOpacity={0.15}>
-                          <animate attributeName="r" dur="2s" repeatCount="indefinite"
-                            values={`${10/zoom};${22/zoom};${10/zoom}`} />
-                          <animate attributeName="fill-opacity" dur="2s" repeatCount="indefinite" values="0.2;0;0.2" />
-                        </circle>
-                      )}
-                      {/* Selected ring */}
-                      {selectedSpot === spot.id && (
-                        <circle r={14 / zoom} fill="none" stroke={spot.color} strokeWidth={1.5 / zoom} strokeOpacity={0.8} />
-                      )}
-                      {/* Main dot */}
-                      <circle
-                        r={7 / zoom}
-                        fill={spot.color}
-                        fillOpacity={0.9}
-                        stroke="#fff"
-                        strokeWidth={1.5 / zoom}
-                        style={{ cursor: 'pointer' }}
-                      />
-                      {/* Risk label */}
-                      <text
-                        textAnchor="middle"
-                        y={-12 / zoom}
-                        style={{ fontFamily: 'Manrope, sans-serif', fontSize: `${9/zoom}px`, fontWeight: 700, fill: spot.color, letterSpacing: '0.05em', pointerEvents: 'none' }}
-                      >
-                        {spot.risk}
-                      </text>
-                      <text
-                        textAnchor="middle"
-                        y={18 / zoom}
-                        style={{ fontFamily: 'Manrope, sans-serif', fontSize: `${7/zoom}px`, fill: 'rgba(255,255,255,0.5)', pointerEvents: 'none' }}
-                      >
-                        {spot.label}
-                      </text>
-                    </Marker>
-                  ))}
-                </ZoomableGroup>
-              </ComposableMap>
+                <TileLayer
+                  url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                  attribution='&copy; CARTO'
+                />
+                {HOTSPOTS.map((spot) => (
+                  <Marker
+                    key={spot.id}
+                    position={spot.coords}
+                    icon={createCircleIcon(spot.color, spot.pulse)}
+                    eventHandlers={{
+                      click: (e) => {
+                        e.domEvent.stopPropagation();
+                        setSelectedSpot(s => s === spot.id ? null : spot.id)
+                      }
+                    }}
+                  />
+                ))}
+              </MapContainer>
             </div>
           </div>
         </div>

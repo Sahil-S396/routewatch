@@ -134,7 +134,7 @@ export default function NewRouteModal({ open, onClose, onRouteCreated }) {
             <h2 className="text-2xl font-black text-white tracking-tight" style={{ fontFamily: 'Manrope, sans-serif' }}>
               New <span className="text-[#3fff8b] italic">Route</span>
             </h2>
-            <p className="text-xs text-white/40 mt-1">Define origin, destination, and a unique route ID.</p>
+            <p className="text-xs text-white/40 mt-1">Indian cities only — AI will analyze disruptions in real time.</p>
           </div>
           <button
             onClick={() => { if (!loading) onClose() }}
@@ -236,7 +236,7 @@ export default function NewRouteModal({ open, onClose, onRouteCreated }) {
                   type="text"
                   value={origin}
                   onChange={(e) => setOrigin(e.target.value)}
-                  placeholder="e.g. Singapore"
+                  placeholder="e.g. Mumbai, Delhi, Chennai"
                   className="w-full bg-[#0e0e0e] border border-[#262626] focus:border-[#3fff8b]/50 focus:ring-1 focus:ring-[#3fff8b]/20 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/20 outline-none transition-all"
                 />
               </div>
@@ -252,7 +252,7 @@ export default function NewRouteModal({ open, onClose, onRouteCreated }) {
                   type="text"
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
-                  placeholder="e.g. Rotterdam"
+                  placeholder="e.g. Kolkata, Hyderabad, Pune"
                   className="w-full bg-[#0e0e0e] border border-[#262626] focus:border-[#3fff8b]/50 focus:ring-1 focus:ring-[#3fff8b]/20 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/20 outline-none transition-all"
                 />
               </div>
