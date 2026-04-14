@@ -4,16 +4,151 @@ import { auth, provider, signInWithPopup, db } from '../lib/firebase'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 
 export default function LandingPage() {
-  const navigate    = useNavigate()
-  const [loading,   setLoading]   = useState(false)
+  const navigate = useNavigate()
+  const [loading, setLoading] = useState(false)
   const [authError, setAuthError] = useState('')
 
   // ── Demo Modal State ──
-  const [demoOpen,    setDemoOpen]    = useState(false)
-  const [demoForm,    setDemoForm]    = useState({ fullName: '', email: '', company: '', message: '' })
+  const [demoOpen, setDemoOpen] = useState(false)
+  const [demoForm, setDemoForm] = useState({ fullName: '', email: '', company: '', message: '' })
   const [demoLoading, setDemoLoading] = useState(false)
   const [demoSuccess, setDemoSuccess] = useState(false)
-  const [demoError,   setDemoError]   = useState('')
+  const [demoError, setDemoError] = useState('')
+
+  // ── Company Info Modal State ──
+  const [infoModal, setInfoModal] = useState(null) // null | 'About Us' | 'Careers' | 'Partners'
+
+  const COMPANY_INFO = {
+    'About Us': {
+      icon: 'info',
+      tagline: 'Built for the Modern Supply Chain',
+      body: 'RouteWatch is an AI-powered logistics intelligence platform founded to eliminate supply chain blind spots. Our team of engineers, data scientists, and logistics veterans are on a mission to give every freight operator enterprise-grade visibility — in real time. We believe disruptions are predictable, and we build the tools that prove it.',
+      stats: [
+        { val: '2026', label: 'Founded' },
+        { val: '3',    label: 'Team Members' },
+        { val: '—',    label: 'Countries Served' },
+      ],
+    },
+    'Careers': {
+      icon: 'work',
+      tagline: 'Join the Mission',
+      body: 'We are always looking for passionate people to help us push the frontier of logistics intelligence. We offer competitive salaries, remote-first culture, equity participation, and the chance to solve some of the hardest real-time data problems in the industry.',
+      stats: [
+        { val: '—',   label: 'Open Roles' },
+        { val: '100%', label: 'Remote-Friendly' },
+        { val: '—',   label: 'Glassdoor Rating' },
+      ],
+    },
+    'Partners': {
+      icon: 'handshake',
+      tagline: 'Grow Together',
+      body: 'RouteWatch partners with freight forwarders, port operators, ERP vendors, and data providers to deliver end-to-end supply chain intelligence. Our partner programme offers co-marketing, API integration support, and revenue sharing for qualified solution providers.',
+      stats: [
+        { val: '—', label: 'Integration Partners' },
+        { val: '—', label: 'Partner Programme' },
+        { val: '—', label: 'Onboarding SLA' },
+      ],
+    },
+  }
+
+  // ── Product Info Modal State ──
+  const [productModal, setProductModal] = useState(null)
+
+  const PRODUCT_INFO = {
+    'Monitoring': {
+      icon: 'radar',
+      body: 'Real-time route monitoring gives you continuous visibility across all active shipments. Our system polls live data feeds and flags anomalies the moment they occur — before delays compound.',
+      stats: [
+        { val: '—', label: 'Routes Tracked' },
+        { val: '—', label: 'Uptime SLA' },
+        { val: '—', label: 'Avg. Latency' },
+      ],
+    },
+    'AI Alerts': {
+      icon: 'notifications_active',
+      body: 'Powered by Gemini AI, RouteWatch analyses weather patterns, traffic feeds, and historical disruption data to generate prioritised alerts with severity scores and rerouting recommendations.',
+      stats: [
+        { val: '—', label: 'Alerts Generated' },
+        { val: '—', label: 'Avg. Severity Score' },
+        { val: '—', label: 'False Positive Rate' },
+      ],
+    },
+    'Integrations': {
+      icon: 'integration_instructions',
+      body: 'RouteWatch connects to your existing stack via REST APIs and webhooks. Firebase powers real-time data sync, while our modular architecture makes adding new data sources straightforward.',
+      stats: [
+        { val: '—', label: 'API Endpoints' },
+        { val: '—', label: 'Webhooks' },
+        { val: '—', label: 'SDKs Available' },
+      ],
+    },
+  }
+
+  // ── Resources Info Modal State ──
+  const [resourcesModal, setResourcesModal] = useState(null)
+
+  const RESOURCES_INFO = {
+    'Documentation': {
+      icon: 'menu_book',
+      body: 'RouteWatch\'s documentation covers API references, integration guides, and platform walkthroughs. As a prototype, docs are actively being written — core concepts and data models are available now.',
+      stats: [
+        { val: '—', label: 'Pages Published' },
+        { val: '—', label: 'API References' },
+        { val: '—', label: 'Code Samples' },
+      ],
+    },
+    'API Status': {
+      icon: 'monitor_heart',
+      body: 'Track the health of all RouteWatch services in real time. Our status page reports uptime for the core API, Firestore sync layer, AI alert engine, and map tile services.',
+      stats: [
+        { val: '—', label: 'Services Monitored' },
+        { val: '—', label: 'Current Uptime' },
+        { val: '—', label: 'Incidents (30d)' },
+      ],
+    },
+    'Knowledge Base': {
+      icon: 'psychology',
+      body: 'Browse how-to articles, FAQs, and troubleshooting guides for RouteWatch. The knowledge base is being built alongside the prototype — foundational articles on route creation and alert triage are live.',
+      stats: [
+        { val: '—', label: 'Articles' },
+        { val: '—', label: 'Categories' },
+        { val: '—', label: 'Avg. Read Time' },
+      ],
+    },
+  }
+
+  // ── Legal Info Modal State ──
+  const [legalModal, setLegalModal] = useState(null)
+
+  const LEGAL_INFO = {
+    'Privacy Policy': {
+      icon: 'privacy_tip',
+      body: 'RouteWatch collects only the data necessary to provide the service — primarily your Google account info for authentication and route/alert data you create. As a prototype, a full privacy policy is being drafted. No data is sold or shared with third parties.',
+      stats: [
+        { val: '—', label: 'Data Collected' },
+        { val: '—', label: 'Third Parties' },
+        { val: '—', label: 'Retention Period' },
+      ],
+    },
+    'Terms of Service': {
+      icon: 'gavel',
+      body: 'RouteWatch is provided as a prototype for demonstration purposes. By using the platform you agree not to misuse the service or submit false data. Full terms of service will be published before the public launch.',
+      stats: [
+        { val: 'Prototype', label: 'Current Status' },
+        { val: '—', label: 'Version' },
+        { val: '—', label: 'Last Updated' },
+      ],
+    },
+    'Security': {
+      icon: 'shield',
+      body: 'Authentication is handled entirely by Google OAuth 2.0 via Firebase Auth — we never store passwords. All data is encrypted in transit over HTTPS. Firestore security rules restrict read/write access to authenticated users only.',
+      stats: [
+        { val: 'OAuth 2.0', label: 'Auth Method' },
+        { val: 'HTTPS', label: 'Encryption' },
+        { val: 'Firebase', label: 'Security Rules' },
+      ],
+    },
+  }
 
   // ── Active Nav Section ──
   const [activeSection, setActiveSection] = useState('')
@@ -57,7 +192,7 @@ export default function LandingPage() {
       ? 'uppercase tracking-wider text-sm font-bold text-[#3fff8b] border-b-2 border-[#3fff8b] pb-1 transition-all duration-300'
       : 'uppercase tracking-wider text-sm font-bold text-gray-400 hover:text-[#3fff8b] transition-all duration-300 pb-1 border-b-2 border-transparent'
 
-  const openDemo  = () => { setDemoOpen(true); setDemoSuccess(false); setDemoError(''); setDemoForm({ fullName: '', email: '', company: '', message: '' }) }
+  const openDemo = () => { setDemoOpen(true); setDemoSuccess(false); setDemoError(''); setDemoForm({ fullName: '', email: '', company: '', message: '' }) }
   const closeDemo = () => { setDemoOpen(false) }
 
   const handleDemoChange = (e) => {
@@ -70,10 +205,10 @@ export default function LandingPage() {
     setDemoError('')
     try {
       await addDoc(collection(db, 'demo_requests'), {
-        fullName:  demoForm.fullName.trim(),
-        email:     demoForm.email.trim(),
-        company:   demoForm.company.trim(),
-        message:   demoForm.message.trim(),
+        fullName: demoForm.fullName.trim(),
+        email: demoForm.email.trim(),
+        company: demoForm.company.trim(),
+        message: demoForm.message.trim(),
         timestamp: serverTimestamp(),
       })
       setDemoSuccess(true)
@@ -211,8 +346,8 @@ export default function LandingPage() {
                 <div className="rounded-2xl w-full h-64 bg-[#131313] flex items-center justify-center overflow-hidden relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-[#3fff8b]/5 to-transparent" />
                   <svg className="w-full h-full opacity-40" viewBox="0 0 400 250">
-                    <path d="M20,200 Q120,80 200,120 T380,40" fill="none" stroke="#3fff8b" strokeWidth="2" className="drop-shadow-[0_0_8px_rgba(63,255,139,0.8)]"/>
-                    <path d="M20,220 Q150,160 280,180 T380,130" fill="none" stroke="#3fff8b" strokeWidth="1.5" strokeDasharray="6 4" opacity="0.5"/>
+                    <path d="M20,200 Q120,80 200,120 T380,40" fill="none" stroke="#3fff8b" strokeWidth="2" className="drop-shadow-[0_0_8px_rgba(63,255,139,0.8)]" />
+                    <path d="M20,220 Q150,160 280,180 T380,130" fill="none" stroke="#3fff8b" strokeWidth="1.5" strokeDasharray="6 4" opacity="0.5" />
                   </svg>
                 </div>
                 <div className="absolute -top-6 -left-6 bg-[#262626] p-4 rounded-2xl border border-[#3fff8b]/30 shadow-lg">
@@ -304,7 +439,7 @@ export default function LandingPage() {
             <div className="grid md:grid-cols-3 gap-6 mb-16">
 
               {/* Card 1 — Freight & Logistics */}
-              <div className="group relative bg-[#131313] rounded-3xl p-8 border border-[#494847]/20 hover:border-[#3fff8b]/30 transition-all duration-500 overflow-hidden">
+              <Link to="/routes" className="group relative bg-[#131313] rounded-3xl p-8 border border-[#494847]/20 hover:border-[#3fff8b]/30 transition-all duration-500 overflow-hidden cursor-pointer block">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#3fff8b]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="relative z-10">
                   <div className="w-14 h-14 bg-[#3fff8b]/10 flex items-center justify-center rounded-2xl mb-8 text-[#3fff8b] group-hover:scale-110 transition-transform duration-300">
@@ -325,10 +460,10 @@ export default function LandingPage() {
                     ))}
                   </ul>
                 </div>
-              </div>
+              </Link>
 
               {/* Card 2 — Port & Terminal Ops (highlighted) */}
-              <div className="group relative bg-gradient-to-b from-[#1a2e1e] to-[#131313] rounded-3xl p-8 border border-[#3fff8b]/30 overflow-hidden">
+              <Link to="/dashboard" className="group relative bg-gradient-to-b from-[#1a2e1e] to-[#131313] rounded-3xl p-8 border border-[#3fff8b]/30 overflow-hidden cursor-pointer block">
                 <div className="absolute top-0 right-0 w-40 h-40 bg-[#3fff8b]/15 blur-[80px] -mr-10 -mt-10 pointer-events-none" />
                 <div className="absolute top-5 right-5 bg-[#3fff8b] text-[#003d1d] text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest" style={{ fontFamily: 'Manrope, sans-serif' }}>
                   Most Popular
@@ -352,10 +487,10 @@ export default function LandingPage() {
                     ))}
                   </ul>
                 </div>
-              </div>
+              </Link>
 
               {/* Card 3 — Cold Chain */}
-              <div className="group relative bg-[#131313] rounded-3xl p-8 border border-[#494847]/20 hover:border-[#84ecff]/30 transition-all duration-500 overflow-hidden">
+              <Link to="/analytics" className="group relative bg-[#131313] rounded-3xl p-8 border border-[#494847]/20 hover:border-[#84ecff]/30 transition-all duration-500 overflow-hidden cursor-pointer block">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#84ecff]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="relative z-10">
                   <div className="w-14 h-14 bg-[#84ecff]/10 flex items-center justify-center rounded-2xl mb-8 text-[#84ecff] group-hover:scale-110 transition-transform duration-300">
@@ -376,17 +511,17 @@ export default function LandingPage() {
                     ))}
                   </ul>
                 </div>
-              </div>
+              </Link>
             </div>
 
             {/* Bottom Banner */}
             <div className="bg-[#131313] rounded-3xl p-10 border border-[#494847]/20 flex flex-col md:flex-row items-center justify-between gap-8">
               <div className="flex flex-wrap gap-10">
                 {[
-                  { icon: 'inventory_2',   label: 'eCommerce & Retail',    color: '#3fff8b' },
+                  { icon: 'inventory_2', label: 'eCommerce & Retail', color: '#3fff8b' },
                   { icon: 'precision_manufacturing', label: 'Automotive Manufacturing', color: '#84ecff' },
-                  { icon: 'vaccines',      label: 'Pharma & Healthcare',   color: '#ff7351' },
-                  { icon: 'agriculture',   label: 'Agri & Food Systems',   color: '#3fff8b' },
+                  { icon: 'vaccines', label: 'Pharma & Healthcare', color: '#ff7351' },
+                  { icon: 'agriculture', label: 'Agri & Food Systems', color: '#3fff8b' },
                 ].map(({ icon, label, color }) => (
                   <div key={label} className="flex items-center gap-3">
                     <span className="material-symbols-outlined" style={{ color, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
@@ -411,10 +546,10 @@ export default function LandingPage() {
         <section className="py-24 bg-[#000000]">
           <div className="max-w-7xl mx-auto px-8 grid grid-cols-2 md:grid-cols-4 gap-12">
             {[
-              { val: '2.4M',  label: 'Shipments Tracked'  },
-              { val: '$140M', label: 'Revenue Recovered'  },
-              { val: '12ms',  label: 'Alert Latency'      },
-              { val: '450+',  label: 'Global Portals'     },
+              { val: '2.4M', label: 'Shipments Tracked' },
+              { val: '$140M', label: 'Revenue Recovered' },
+              { val: '12ms', label: 'Alert Latency' },
+              { val: '450+', label: 'Global Portals' },
             ].map(({ val, label }) => (
               <div key={label} className="text-center md:text-left">
                 <div className="text-[#3fff8b] text-4xl font-extrabold mb-2" style={{ fontFamily: 'Manrope, sans-serif' }}>{val}</div>
@@ -441,9 +576,7 @@ export default function LandingPage() {
                   >
                     Get Access Now
                   </button>
-                  <button className="text-white border border-[#777575] px-10 py-5 rounded-xl font-bold uppercase tracking-wide text-sm hover:bg-white/5 transition-all" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                    Contact Sales
-                  </button>
+
                 </div>
               </div>
             </div>
@@ -456,17 +589,39 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             {[
-              { title: 'Company',   links: ['About Us', 'Careers', 'Partners'] },
-              { title: 'Product',   links: ['Monitoring', 'AI Alerts', 'Integrations'] },
+              { title: 'Company', links: ['About Us', 'Careers', 'Partners'] },
+              { title: 'Product', links: ['Monitoring', 'AI Alerts', 'Integrations'] },
               { title: 'Resources', links: ['Documentation', 'API Status', 'Knowledge Base'] },
-              { title: 'Legal',     links: ['Privacy Policy', 'Terms of Service', 'Security'] },
+              { title: 'Legal', links: ['Privacy Policy', 'Terms of Service', 'Security'] },
             ].map(({ title, links }) => (
               <div key={title}>
                 <div className="text-[#3fff8b] font-bold mb-6" style={{ fontFamily: 'Manrope, sans-serif' }}>{title}</div>
                 <ul className="space-y-4">
                   {links.map(l => (
                     <li key={l}>
-                      <a href="#" className="text-sm text-gray-500 hover:text-[#3fff8b] transition-colors duration-200">{l}</a>
+                      {title === 'Company' ? (
+                        <button
+                          onClick={() => setInfoModal(l)}
+                          className="text-sm text-gray-500 hover:text-[#3fff8b] transition-colors duration-200 text-left"
+                        >{l}</button>
+                      ) : title === 'Product' ? (
+                        <button
+                          onClick={() => setProductModal(l)}
+                          className="text-sm text-gray-500 hover:text-[#3fff8b] transition-colors duration-200 text-left"
+                        >{l}</button>
+                      ) : title === 'Resources' ? (
+                        <button
+                          onClick={() => setResourcesModal(l)}
+                          className="text-sm text-gray-500 hover:text-[#3fff8b] transition-colors duration-200 text-left"
+                        >{l}</button>
+                      ) : title === 'Legal' ? (
+                        <button
+                          onClick={() => setLegalModal(l)}
+                          className="text-sm text-gray-500 hover:text-[#3fff8b] transition-colors duration-200 text-left"
+                        >{l}</button>
+                      ) : (
+                        <a href="#" className="text-sm text-gray-500 hover:text-[#3fff8b] transition-colors duration-200">{l}</a>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -632,6 +787,235 @@ export default function LandingPage() {
           </div>
         </div>
       )}
+
+      {/* ── Company Info Modal ── */}
+      {infoModal && (() => {
+        const info = COMPANY_INFO[infoModal]
+        return (
+          <div
+            className="fixed inset-0 z-[999] flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) setInfoModal(null) }}
+          >
+            <div
+              className="relative w-full max-w-lg rounded-3xl border border-[#3fff8b]/20 shadow-2xl overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, #1a1919 0%, #131313 100%)',
+                boxShadow: '0 0 80px rgba(63,255,139,0.08)',
+              }}
+            >
+              {/* Close */}
+              <button
+                onClick={() => setInfoModal(null)}
+                className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-[#262626] hover:bg-[#333] text-gray-400 hover:text-white transition-all z-10"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+
+              {/* Accent bar */}
+              <div className="h-1 w-full bg-gradient-to-r from-[#3fff8b] to-[#13ea79]" />
+
+              <div className="p-8 md:p-10">
+                {/* Header */}
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-2xl bg-[#3fff8b]/10 flex items-center justify-center text-[#3fff8b] flex-shrink-0">
+                    <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>{info.icon}</span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#3fff8b] mb-0.5">Company</p>
+                    <h2 className="text-2xl font-extrabold tracking-tighter text-white" style={{ fontFamily: 'Manrope, sans-serif' }}>{infoModal}</h2>
+                  </div>
+                </div>
+
+                <p className="text-[#adaaaa] text-sm leading-relaxed mb-8">{info.body}</p>
+
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-4 mb-8">
+                  {info.stats.map(s => (
+                    <div key={s.label} className="bg-[#0e0e0e] rounded-2xl p-4 text-center border border-white/5">
+                      <div className="text-[#3fff8b] text-xl font-black mb-1" style={{ fontFamily: 'Manrope, sans-serif' }}>{s.val}</div>
+                      <div className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setInfoModal(null)}
+                  className="w-full py-3 rounded-xl bg-[#3fff8b]/10 border border-[#3fff8b]/20 text-[#3fff8b] font-bold text-sm uppercase tracking-widest hover:bg-[#3fff8b]/20 transition-all"
+                  style={{ fontFamily: 'Manrope, sans-serif' }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ── Product Info Modal ── */}
+      {productModal && (() => {
+        const info = PRODUCT_INFO[productModal]
+        return (
+          <div
+            className="fixed inset-0 z-[999] flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) setProductModal(null) }}
+          >
+            <div
+              className="relative w-full max-w-lg rounded-3xl border border-[#3fff8b]/20 shadow-2xl overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, #1a1919 0%, #131313 100%)',
+                boxShadow: '0 0 80px rgba(63,255,139,0.08)',
+              }}
+            >
+              <button
+                onClick={() => setProductModal(null)}
+                className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-[#262626] hover:bg-[#333] text-gray-400 hover:text-white transition-all z-10"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+              <div className="h-1 w-full bg-gradient-to-r from-[#3fff8b] to-[#13ea79]" />
+              <div className="p-8 md:p-10">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-2xl bg-[#3fff8b]/10 flex items-center justify-center text-[#3fff8b] flex-shrink-0">
+                    <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>{info.icon}</span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#3fff8b] mb-0.5">Product</p>
+                    <h2 className="text-2xl font-extrabold tracking-tighter text-white" style={{ fontFamily: 'Manrope, sans-serif' }}>{productModal}</h2>
+                  </div>
+                </div>
+                <p className="text-[#adaaaa] text-sm leading-relaxed mb-8">{info.body}</p>
+                <div className="grid grid-cols-3 gap-4 mb-8">
+                  {info.stats.map(s => (
+                    <div key={s.label} className="bg-[#0e0e0e] rounded-2xl p-4 text-center border border-white/5">
+                      <div className="text-[#3fff8b] text-xl font-black mb-1" style={{ fontFamily: 'Manrope, sans-serif' }}>{s.val}</div>
+                      <div className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setProductModal(null)}
+                  className="w-full py-3 rounded-xl bg-[#3fff8b]/10 border border-[#3fff8b]/20 text-[#3fff8b] font-bold text-sm uppercase tracking-widest hover:bg-[#3fff8b]/20 transition-all"
+                  style={{ fontFamily: 'Manrope, sans-serif' }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ── Resources Info Modal ── */}
+      {resourcesModal && (() => {
+        const info = RESOURCES_INFO[resourcesModal]
+        return (
+          <div
+            className="fixed inset-0 z-[999] flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) setResourcesModal(null) }}
+          >
+            <div
+              className="relative w-full max-w-lg rounded-3xl border border-[#3fff8b]/20 shadow-2xl overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, #1a1919 0%, #131313 100%)',
+                boxShadow: '0 0 80px rgba(63,255,139,0.08)',
+              }}
+            >
+              <button
+                onClick={() => setResourcesModal(null)}
+                className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-[#262626] hover:bg-[#333] text-gray-400 hover:text-white transition-all z-10"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+              <div className="h-1 w-full bg-gradient-to-r from-[#3fff8b] to-[#13ea79]" />
+              <div className="p-8 md:p-10">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-2xl bg-[#3fff8b]/10 flex items-center justify-center text-[#3fff8b] flex-shrink-0">
+                    <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>{info.icon}</span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#3fff8b] mb-0.5">Resources</p>
+                    <h2 className="text-2xl font-extrabold tracking-tighter text-white" style={{ fontFamily: 'Manrope, sans-serif' }}>{resourcesModal}</h2>
+                  </div>
+                </div>
+                <p className="text-[#adaaaa] text-sm leading-relaxed mb-8">{info.body}</p>
+                <div className="grid grid-cols-3 gap-4 mb-8">
+                  {info.stats.map(s => (
+                    <div key={s.label} className="bg-[#0e0e0e] rounded-2xl p-4 text-center border border-white/5">
+                      <div className="text-[#3fff8b] text-xl font-black mb-1" style={{ fontFamily: 'Manrope, sans-serif' }}>{s.val}</div>
+                      <div className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setResourcesModal(null)}
+                  className="w-full py-3 rounded-xl bg-[#3fff8b]/10 border border-[#3fff8b]/20 text-[#3fff8b] font-bold text-sm uppercase tracking-widest hover:bg-[#3fff8b]/20 transition-all"
+                  style={{ fontFamily: 'Manrope, sans-serif' }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ── Legal Info Modal ── */}
+      {legalModal && (() => {
+        const info = LEGAL_INFO[legalModal]
+        return (
+          <div
+            className="fixed inset-0 z-[999] flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) setLegalModal(null) }}
+          >
+            <div
+              className="relative w-full max-w-lg rounded-3xl border border-[#3fff8b]/20 shadow-2xl overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, #1a1919 0%, #131313 100%)',
+                boxShadow: '0 0 80px rgba(63,255,139,0.08)',
+              }}
+            >
+              <button
+                onClick={() => setLegalModal(null)}
+                className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-[#262626] hover:bg-[#333] text-gray-400 hover:text-white transition-all z-10"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+              <div className="h-1 w-full bg-gradient-to-r from-[#3fff8b] to-[#13ea79]" />
+              <div className="p-8 md:p-10">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-2xl bg-[#3fff8b]/10 flex items-center justify-center text-[#3fff8b] flex-shrink-0">
+                    <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>{info.icon}</span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#3fff8b] mb-0.5">Legal</p>
+                    <h2 className="text-2xl font-extrabold tracking-tighter text-white" style={{ fontFamily: 'Manrope, sans-serif' }}>{legalModal}</h2>
+                  </div>
+                </div>
+                <p className="text-[#adaaaa] text-sm leading-relaxed mb-8">{info.body}</p>
+                <div className="grid grid-cols-3 gap-4 mb-8">
+                  {info.stats.map(s => (
+                    <div key={s.label} className="bg-[#0e0e0e] rounded-2xl p-4 text-center border border-white/5">
+                      <div className="text-[#3fff8b] text-xl font-black mb-1" style={{ fontFamily: 'Manrope, sans-serif' }}>{s.val}</div>
+                      <div className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setLegalModal(null)}
+                  className="w-full py-3 rounded-xl bg-[#3fff8b]/10 border border-[#3fff8b]/20 text-[#3fff8b] font-bold text-sm uppercase tracking-widest hover:bg-[#3fff8b]/20 transition-all"
+                  style={{ fontFamily: 'Manrope, sans-serif' }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
